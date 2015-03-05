@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Increase ulimit to recommended levels
+ulimit -n <%= @open_file_limit %> <%= @open_file_limit %>
+
+/usr/local/bin/mongod --config <%= @config_file %>

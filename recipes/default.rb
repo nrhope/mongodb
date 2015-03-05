@@ -19,6 +19,11 @@
 
 raise "Running MongoDB on a 32bit box is a bad idea, so we won't let you do it - sorry!" if node['kernel']['machine'] == "i686"
 
+case node["platform"]
+when "centos", "redhat"
+  include_recipe "runit"
+end
+
 chef_gem 'mongo' do
   version node['mongodb']['gem_version']['mongo']
 end

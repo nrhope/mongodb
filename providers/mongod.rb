@@ -17,6 +17,17 @@
 # limitations under the License.
 #
 
+# Needed as we can't embed an include_recipe inline to LWRP
+#def initialize(*args)
+#  super
+#  @action = :create
+#
+#  case node["platform"]
+#  when "centos", "redhat"
+#    @run_context.include_recipe "runit"
+#  end
+#end
+
 action :create do
   instance_name = if new_resource.name == "default" then "mongod"
                   else "mongod-#{new_resource.name}"
@@ -37,6 +48,7 @@ action :create do
       'db_path' => ::File.join(node['mongodb']['data_dir'], instance_name),
       'replica_set' => new_resource.replica_set
     })
+    checksum nil
 
     notifies :restart, "service[#{instance_name}]"
   end
@@ -104,6 +116,35 @@ action :create do
       action [:enable, :start]
     end 
 
+  when "centos", "redhat"
+    # Init script
+#    template "/etc/mongodb/simple-mongod-run.sh" do
+#      source "simple-mongod-run.sh.erb"
+#      mode '755'
+#      cookbook 'hipsnip-mongodb'
+#      variables(
+#        :config_file => config_file,
+#        :open_file_limit => node['mongodb']['open_file_limit']
+#      )   
+#    end 
+
+    runit_service instance_name do
+      options({
+        #:user => node['mongodb']['user']
+        :config_file => config_file,
+        :user => "root"
+      })
+    end
+
+    service instance_name do
+      supports       :status => true, :restart => true, :reload => true
+      reload_command "#{node['runit']['sv_bin']} hup #{node['runit']['service_dir']}/#{instance_name}"
+    end
+
+    execute "check #{instance_name} service is running" do
+      action :run
+      command "sv status #{instance_name}"
+    end
   end 
 
 

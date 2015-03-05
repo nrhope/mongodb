@@ -1,0 +1,8 @@
+#!/bin/sh
+exec 2>&1
+#exec chpst -u <%= @options[:user] %> /etc/mongodb/simple-mongod-run.sh
+
+# Increase ulimit to recommended levels
+#ulimit -n <%= @options[:open_file_limit] %> <%= @options[:open_file_limit] %>
+
+exec /usr/local/bin/mongod --config <%= @options[:config_file] %>
